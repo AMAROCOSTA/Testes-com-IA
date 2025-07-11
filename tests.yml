@@ -1,0 +1,48 @@
+name: Cypress Tests with AI
+
+on: # Dispara o workflow quando:
+  push: # Há push para o repositório
+    branches: [ main, master ] # Só nas branches main/master
+  pull_request: # Ou quando há um pull request
+    branches: [ main, master ]
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest # Máquina virtual que será usada
+    name: Running Cypress tests with AI
+    steps:
+      # Passo 1: Baixa o código do repositório
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      # Passo 2: Configura Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Versão do Node.js
+          cache: 'npm' # Habilita cache de dependências
+          
+      # Passo 3: Instala dependências
+      - name: Install dependencies
+        run: npm ci # 'ci' é mais seguro que 'install' para CI
+          
+      # Passo 4: Executa os testes Cypress
+      - name: Run Cypress tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # Chave da API OpenAI
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }} # Opcional para Cypress Dashboard
+        run: |
+          npx cypress run --browser chrome --headless
+          # Para gravar no Dashboard:
+          # npx cypress run --record --key $CYPRESS_RECORD_KEY
+          
+      # Passo 5 (opcional): Upload de artefatos quando falhar
+      - name: Upload test artifacts
+        if: failure() # Só executa se os testes falharem
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-artifacts
+          path: |
+            cypress/screenshots
+            cypress/videos
+            cypress/results
