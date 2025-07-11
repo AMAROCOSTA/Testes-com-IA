@@ -35,6 +35,12 @@ jobs:
           cache: 'npm' # Habilita cache de dependências
           
       # Passo 3: Instala dependências
+
+      - name: Install dependencies
+  run: |
+    if [ -f node_modules ]; then npm ci; else npm install; fi
+  env:
+    CI: true
       - name: Install dependencies
         run: npm ci # 'ci' é mais seguro que 'install' para CI
           
